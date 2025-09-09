@@ -93,10 +93,14 @@ gl_viewport_resize :: #force_inline proc() {
     gl.Viewport(0, 0, ctx.width, ctx.height)
 }
 
-window_should_close :: proc() -> bool {
+window_should_close :: #force_inline proc() -> bool {
     return ctx.should_close
 }
 
-swap_window :: proc() {
+swap_window :: #force_inline proc() {
     sdl.GL_SwapWindow(ctx.window)
+}
+
+get_window_size_f32 :: #force_inline proc() -> (f32, f32){
+    return f32(ctx.width), f32(ctx.height)
 }
