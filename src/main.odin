@@ -42,12 +42,12 @@ main :: proc() {
     sprite := en.load_shader(SPRITE_VERTEX_SHADER, SPRITE_FRAGMENT_SHADER)
     defer en.unload_shader(sprite)
 
-    awesomeface := en.load_texture("assets/textures/awesomeface.png")
+    face        := en.load_texture("assets/textures/face.png")
     block       := en.load_texture("assets/textures/block.png")
     paddle      := en.load_texture("assets/textures/paddle.png")
     background  := en.load_texture("assets/textures/background.jpg", false)
 
-    defer en.unload_texture(&awesomeface)
+    defer en.unload_texture(&face)
     defer en.unload_texture(&block)
     defer en.unload_texture(&paddle)
     defer en.unload_texture(&background)
@@ -67,14 +67,14 @@ main :: proc() {
         en.set_current_shader(sprite)
         en.draw_sprite(background, {w * 0.5, h * 0.5}, {w, h}, 0, {200, 200, 255, 255})
 
-        en.draw_sprite(awesomeface, {200, 200}, {100, 100}, rot)
-        en.draw_sprite(block,       {600, 600}, {200, 150}, 0)
+        en.draw_sprite(face,  {200, 200}, {100, 100}, rot)
+        en.draw_sprite(block, {600, 600}, {100, 100}, 0)
 
         en.draw_sprite(paddle, {500, 300}, {200, 50}, rot)
 
         en.clear_shader() // sets default shader
-        en.draw_quad({400, 620}, {100, 100}, rot * -1, {50, 150, 255, 255})
-        en.draw_quad({600, 100}, {100, 100}, rot * -1)
+        en.draw_quad({400, 620}, {100, 100}, rot, {50, 150, 255, 255})
+        en.draw_quad({600, 100}, {100, 100}, rot)
 
         en.swap_window()
     }

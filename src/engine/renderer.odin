@@ -180,7 +180,7 @@ draw_sprite :: proc(texture: Texture, position, size: glm.vec2, rotate: f32, col
     gl.UseProgram(r.current_shader.id)
 
     model := glm.mat4Translate({position.x, position.y, 0})
-    model *= glm.mat4Rotate({0.0, 0.0, 1.0}, glm.radians(rotate))
+    model *= glm.mat4Rotate({0, 0, -1}, glm.radians(rotate))
     model *= glm.mat4Translate({-0.5 * size.x, -0.5 * size.y, 0.0})
     model *= glm.mat4Scale({size.x, size.y, 0})
 
@@ -206,7 +206,7 @@ draw_quad :: proc(position, size: glm.vec2, rotate: f32, color: Color = {255, 25
     gl.UseProgram(r.current_shader.id)
 
     model := glm.mat4Translate({position.x, position.y, 0})
-    model *= glm.mat4Rotate({0, 0, 1}, glm.radians(rotate))
+    model *= glm.mat4Rotate({0, 0, -1}, glm.radians(rotate))
     model *= glm.mat4Translate({-0.5 * size.x, -0.5 * size.y, 0.0})
     model *= glm.mat4Scale({size.x, size.y, 0})
 
