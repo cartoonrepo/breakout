@@ -14,7 +14,7 @@ source        = "src"
 
 collections   = []
 # collections   = [f"-collection:engine={source}/engine"]
-extra_flags   = ["-strict-style", "-keep-executable"]
+extra_flags   = ["-strict-style", "-keep-executable", "-show-timings"]
 debug_flags   = ["-debug"]
 release_flags = ["-o:speed", "-vet", "-no-bounds-check"]
 

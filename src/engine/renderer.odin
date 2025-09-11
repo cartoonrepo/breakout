@@ -143,8 +143,6 @@ load_texture :: proc(file: cstring, alpha: bool = true) -> (texture: Texture) {
         texture.image_format    = gl.RGB
     }
 
-    stbi.set_flip_vertically_on_load(1)
-
     width, height, channels: i32
     data := stbi.load(file, &width, &height, &channels, 0)
     defer stbi.image_free(data)
@@ -156,6 +154,7 @@ load_texture :: proc(file: cstring, alpha: bool = true) -> (texture: Texture) {
         gl.TexImage2D(gl.TEXTURE_2D, 0, texture.internal_format, width, height, 0, texture.image_format, gl.UNSIGNED_BYTE, data)
         gl.GenerateMipmap(gl.TEXTURE_2D)
     } else {
+        unload_texture(&texture)
         fmt.printfln("Failed to load texture: %v", file)
     }
 
@@ -166,11 +165,10 @@ unload_texture :: proc(texture: ^Texture) {
     gl.DeleteTextures(1, &texture.id)
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
 // /sprite
 @(private)
 set_projection :: #force_inline proc(shader: u32, width, height: f32) {
-    projection := glm.mat4Ortho3d(0, width, 0, height, -2.0, 2.0)
+    projection := glm.mat4Ortho3d(0, width, height, 0, -2.0, 2.0)
     gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "projection"),  1, false, &projection[0, 0])
 }
 
@@ -179,9 +177,10 @@ draw_sprite :: proc(texture: Texture, position, size: glm.vec2, rotate: f32, col
 
     gl.UseProgram(r.current_shader.id)
 
-    model := glm.mat4Translate({position.x, position.y, 0})
+    p := position + size * 0.5
+    model := glm.mat4Translate({p.x, p.y, 0})
     model *= glm.mat4Rotate({0, 0, -1}, glm.radians(rotate))
-    model *= glm.mat4Translate({-0.5 * size.x, -0.5 * size.y, 0.0})
+    model *= glm.mat4Translate({size.x * -0.5, size.y * -0.5, 0.0})
     model *= glm.mat4Scale({size.x, size.y, 0})
 
     gl.UniformMatrix4fv(gl.GetUniformLocation(r.current_shader.id, "model"),  1, false, &model[0, 0])
@@ -205,9 +204,10 @@ draw_quad :: proc(position, size: glm.vec2, rotate: f32, color: Color = {255, 25
 
     gl.UseProgram(r.current_shader.id)
 
-    model := glm.mat4Translate({position.x, position.y, 0})
+    p := position + size * 0.5
+    model := glm.mat4Translate({p.x, p.y, 0})
     model *= glm.mat4Rotate({0, 0, -1}, glm.radians(rotate))
-    model *= glm.mat4Translate({-0.5 * size.x, -0.5 * size.y, 0.0})
+    model *= glm.mat4Translate({size.x * -0.5, size.y * -0.5, 0.0})
     model *= glm.mat4Scale({size.x, size.y, 0})
 
     gl.UniformMatrix4fv(gl.GetUniformLocation(r.current_shader.id, "model"),  1, false, &model[0, 0])
