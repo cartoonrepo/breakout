@@ -14,9 +14,9 @@ source        = "src"
 
 collections   = []
 # collections   = [f"-collection:engine={source}/engine"]
-extra_flags   = ["-strict-style", "-keep-executable", "-show-timings"]
+extra_flags   = ["-strict-style", "-keep-executable"]
 debug_flags   = ["-debug"]
-release_flags = ["-o:speed", "-vet", "-no-bounds-check"]
+release_flags = ["-o:speed", "-vet", "-no-bounds-check", "-disable-assert", "-show-timings"]
 
 IS_WINDOWS = platform.system() == "Windows"
 # if IS_WINDOWS:

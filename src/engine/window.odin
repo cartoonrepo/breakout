@@ -15,6 +15,7 @@ Context :: struct {
     window_flags  : sdl.WindowFlags,
     gl_context    : sdl.GLContext,
     should_close  : bool,
+    resized       : bool,
 }
 
 @(private)
@@ -50,7 +51,7 @@ init_window :: proc(title: cstring, width, height: i32) {
 
     gl.load_up_to(GL_VERSION_MAJOR, GL_VERSION_MINOR, sdl.gl_set_proc_address)
 
-    gl_viewport_resize()
+    gl_viewport_resize(ctx.width, ctx.height)
 
     when ODIN_DEBUG {
         log_opengl_info()
@@ -72,6 +73,7 @@ close_window :: proc() {
 }
 
 process_event :: proc() {
+    ctx.resized = false
     event: sdl.Event
     for sdl.PollEvent(&event) {
         #partial switch event.type {
@@ -83,14 +85,11 @@ process_event :: proc() {
                 ctx.should_close = true
             }
         case .WINDOW_PIXEL_SIZE_CHANGED:
-            gl_viewport_resize()
+            ctx.resized = true
+            sdl.GetWindowSizeInPixels(ctx.window, &ctx.width, &ctx.height)
+            gl_viewport_resize(ctx.width, ctx.height)
         }
     }
-}
-
-gl_viewport_resize :: #force_inline proc() {
-    sdl.GetWindowSizeInPixels(ctx.window, &ctx.width, &ctx.height)
-    gl.Viewport(0, 0, ctx.width, ctx.height)
 }
 
 window_should_close :: #force_inline proc() -> bool {
@@ -103,4 +102,8 @@ swap_window :: #force_inline proc() {
 
 get_window_size_f32 :: #force_inline proc() -> (f32, f32){
     return f32(ctx.width), f32(ctx.height)
+}
+
+window_resized :: #force_inline proc() -> bool {
+    return ctx.resized
 }

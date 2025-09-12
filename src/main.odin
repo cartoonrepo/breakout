@@ -1,12 +1,8 @@
 package main
 
 import    "core:fmt"
-import    "core:os"
 import    "core:mem"
 import en "engine"
-
-import vmem "core:mem/virtual"
-import "base:runtime"
 
 TITLE         :: "Breakout"
 SCREEN_WIDTH  :: 960
@@ -14,12 +10,6 @@ SCREEN_HEIGHT :: 960
 
 SPRITE_VERTEX_SHADER   :: "assets/shaders/sprite.vert"
 SPRITE_FRAGMENT_SHADER :: "assets/shaders/sprite.frag"
-
-BRICK_COLOR_1 :: en.Color {220, 220, 200, 255}
-BRICK_COLOR_2 :: en.Color {50, 100, 220, 255}
-BRICK_COLOR_3 :: en.Color {0, 220, 100, 255}
-BRICK_COLOR_4 :: en.Color {220, 220, 100, 255}
-BRICK_COLOR_5 :: en.Color {220, 140, 0, 255}
 
 main :: proc() {
     when ODIN_DEBUG {
@@ -44,12 +34,13 @@ main :: proc() {
         }
     }
 
-    arena := arena_allocate()
-    arena_alloc := vmem.arena_allocator(&arena)
-    defer	vmem.arena_destroy(&arena)
+    // /arena
+    en.arena_allocate(); defer en.destroy_arena()
 
-    // en.set_window_flags({.RESIZABLE, .MAXIMIZED})
+    en.set_window_flags({.RESIZABLE, .MAXIMIZED})
     en.init_window(TITLE, SCREEN_WIDTH, SCREEN_HEIGHT); defer en.close_window()
+
+    screen_width, screen_height := en.get_window_size_f32()
 
     en.init_renderer(); defer en.destroy_renderer()
 
@@ -67,29 +58,26 @@ main :: proc() {
     defer en.unload_texture(&paddle)
     defer en.unload_texture(&background)
 
-    levels := load_levels(block_solid, block, &arena_alloc)
+    levels := load_levels(&block_solid, &block)
     select_level = .Three
 
     main_loop: for {
         en.process_event()
         if en.window_should_close() do break main_loop
 
+        if en.window_resized() {
+            screen_width, screen_height = en.get_window_size_f32()
+            update_level(&levels[int(select_level)], screen_width, screen_height)
+        }
+
+        // /draw
         en.clear_background({0, 25, 38, 255})
         defer en.swap_window()
 
         en.set_current_shader(sprite)
 
-        w, h := en.get_window_size_f32()
-        en.draw_sprite(background, {0, 0}, {w, h}, 0, {200, 200, 255, 255})
+        en.draw_sprite(background, {0, 0}, {screen_width, screen_height}, 0, {200, 200, 255, 255})
 
-        draw_levels(select_level, &levels)
-    }
-}
-
-arena_allocate :: proc() -> (vmem.Arena) {
-    arena: vmem.Arena
-    arena_err := vmem.arena_init_growing(&arena)
-    ensure(arena_err == nil)
-
-	return arena
+        draw_level(&levels[int(select_level)])
+   }
 }

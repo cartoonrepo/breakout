@@ -240,3 +240,7 @@ clear_background :: proc(color: Color) {
     gl.ClearColor(c.x, c.y, c.z, c.w)
     gl.Clear(gl.COLOR_BUFFER_BIT)
 }
+
+gl_viewport_resize :: proc(width, height: i32) {
+    gl.Viewport(0, 0, width, height)
+}
