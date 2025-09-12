@@ -30,8 +30,9 @@ allocate_memory :: proc($T: typeid/[]$E, #any_int len: int, loc := #caller_locat
 
     if error != .None {
         fmt.eprintfln("%v: ERROR: Failed to allocate memory", loc)
-        fmt.eprintfln("Arena Capacity : %v", ARENA_CAPACITY)
-        fmt.eprintfln("Memory asked   : %v", size_of(E) * len)
+        fmt.eprintfln("Arena Capacity   : %v", ARENA_CAPACITY)
+        fmt.eprintfln("Memory available : %v", ARENA_CAPACITY - arena.offset)
+        fmt.eprintfln("Memory asked     : %v", size_of(E) * len)
         destroy_arena()
         os.exit(1)
     }
