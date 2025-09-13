@@ -2,6 +2,8 @@ package main
 
 import    "core:fmt"
 import    "core:mem"
+import    "core:time"
+import sdl "vendor:sdl3"
 import en "engine"
 
 TITLE         :: "Breakout"
@@ -10,6 +12,12 @@ SCREEN_HEIGHT :: 960
 
 SPRITE_VERTEX_SHADER   :: "assets/shaders/sprite.vert"
 SPRITE_FRAGMENT_SHADER :: "assets/shaders/sprite.frag"
+
+Game_State :: enum {
+    Active,
+    Menu,
+    Win,
+}
 
 main :: proc() {
     when ODIN_DEBUG {
@@ -60,38 +68,89 @@ main :: proc() {
     defer en.unload_texture(&background)
 
     levels := load_levels(&block_solid, &block)
-    select_level = .Three
+    select_level = .One
 
 
-    p_w := f32(paddle.width)  * 0.3
-    p_h := f32(paddle.height) * 0.3
+    player := setup_player(&paddle, 150, 30, 800, screen_width, screen_height)
+    ball   := setup_ball(&face, 50, 800, &player)
 
-    x := (screen_width - p_w) / 2
-    y := screen_height - p_h
+    game_state := Game_State.Active
 
-    fmt.println(screen_width, screen_height)
-    fmt.println(x, y)
-
+    last_time: f32
+    start_tick := time.tick_now()
     main_loop: for {
+        current_time := f32(time.duration_seconds(time.tick_since(start_tick)))
+        delta_time   := current_time - last_time
+        last_time     = current_time
+
         en.process_event()
+        key_state := sdl.GetKeyboardState(nil)
+
         if en.window_should_close() do break main_loop
 
         if en.window_resized() {
             screen_width, screen_height = en.get_window_size_f32()
+            player = setup_player(&paddle, 150, 30, 800, screen_width, screen_height)
+
             update_level(&levels[int(select_level)], screen_width, screen_height)
+        }
+
+        switch game_state {
+        case .Active :
+            vel: f32
+            if key_state[i32(sdl.Scancode.A)] do vel = -1
+            if key_state[i32(sdl.Scancode.D)] do vel =  1
+
+            player.pos.x += vel * player.speed * delta_time
+
+            if player.pos.x < 0 do player.pos.x = 0
+            if player.pos.x > screen_width - player.size.x do player.pos.x = screen_width - player.size.x
+
+            ball.pos.x = player.pos.x + (player.size.x - ball.size.x) / 2
+
+        case .Menu:
+        case .Win:
         }
 
         // /draw
         en.clear_background({0, 25, 38, 255})
         defer en.swap_window()
 
-        en.set_current_shader(sprite)
+        switch game_state {
+        case .Active :
+            en.set_current_shader(sprite)
+            en.draw_sprite(background, {0, 0}, {screen_width, screen_height}, 0, {100, 100, 155, 255})
 
-        en.draw_sprite(background, {0, 0}, {screen_width, screen_height}, 0, {100, 100, 155, 255})
+            en.draw_sprite(player.sprite, player.pos, player.size, 0)
+            en.draw_sprite(ball.sprite, ball.pos, ball.size, 0)
 
-
-        en.draw_sprite(paddle, {x, y}, {p_w, p_h}, 0)
-
-        draw_level(&levels[int(select_level)])
+            draw_level(&levels[int(select_level)])
+        case .Menu:
+        case .Win:
+        }
    }
+}
+
+setup_player :: proc(texture: ^en.Texture, width, height, speed, screen_width, screen_height: f32) -> Entity {
+    x := (screen_width - width) / 2
+    y := screen_height - height * 1.5
+
+    return Entity {
+        pos    = {x, y},
+        size   = {width, height},
+        speed  = speed,
+        sprite = texture^,
+    }
+}
+
+setup_ball :: proc(texture: ^en.Texture, size, speed: f32, player: ^Entity) -> Entity {
+    x := player.pos.x + (player.size.x - size) / 2
+    y := player.pos.y - size
+
+    return Entity {
+        pos    = {x, y},
+        size   = {size, size},
+        speed  = speed,
+        sprite = texture^,
+    }
 }

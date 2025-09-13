@@ -124,16 +124,19 @@ clear_shader :: #force_inline proc() {
 }
 
 // /texture
-// TODO: delete texture
 load_texture :: proc(file: cstring, alpha: bool = true) -> (texture: Texture) {
-    gl.GenTextures(1, &texture.id)
-    gl.BindTexture(gl.TEXTURE_2D, texture.id)
+    width, height, channels: i32
+    data := stbi.load(file, &width, &height, &channels, 0)
+    defer stbi.image_free(data)
 
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    if data == nil {
+        // NOTE: we return 0 texture id
+        fmt.printfln("EROOR: Failed to load texture: %v", file)
+        return
+    }
 
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    texture.width  = width
+    texture.height = height
 
     if alpha {
         texture.internal_format = gl.RGBA
@@ -143,20 +146,17 @@ load_texture :: proc(file: cstring, alpha: bool = true) -> (texture: Texture) {
         texture.image_format    = gl.RGB
     }
 
-    width, height, channels: i32
-    data := stbi.load(file, &width, &height, &channels, 0)
-    defer stbi.image_free(data)
+    gl.GenTextures(1, &texture.id)
+    gl.BindTexture(gl.TEXTURE_2D, texture.id)
 
-    if data != nil {
-        texture.width  = width
-        texture.height = height
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
 
-        gl.TexImage2D(gl.TEXTURE_2D, 0, texture.internal_format, width, height, 0, texture.image_format, gl.UNSIGNED_BYTE, data)
-        gl.GenerateMipmap(gl.TEXTURE_2D)
-    } else {
-        unload_texture(&texture)
-        fmt.printfln("Failed to load texture: %v", file)
-    }
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+    gl.TexImage2D(gl.TEXTURE_2D, 0, texture.internal_format, width, height, 0, texture.image_format, gl.UNSIGNED_BYTE, data)
+    gl.GenerateMipmap(gl.TEXTURE_2D)
 
     return
 }
@@ -223,7 +223,6 @@ draw_quad :: proc(position, size: glm.vec2, rotate: f32, color: Color = {255, 25
     gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
     gl.BindVertexArray(0)
 }
-
 
 // /utils
 normalize_color :: proc(color: Color) -> [4]f32 {
