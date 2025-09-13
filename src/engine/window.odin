@@ -49,6 +49,10 @@ init_window :: proc(title: cstring, width, height: i32) {
         os.exit(1)
     }
 
+    // set context width and height
+    ctx.width  = width
+    ctx.height = height
+
     gl.load_up_to(GL_VERSION_MAJOR, GL_VERSION_MINOR, sdl.gl_set_proc_address)
 
     gl_viewport_resize(ctx.width, ctx.height)

@@ -37,7 +37,7 @@ main :: proc() {
     // /arena
     en.arena_allocate(); defer en.destroy_arena()
 
-    en.set_window_flags({.RESIZABLE, .MAXIMIZED})
+    // en.set_window_flags({.RESIZABLE, .MAXIMIZED})
     en.init_window(TITLE, SCREEN_WIDTH, SCREEN_HEIGHT); defer en.close_window()
 
     screen_width, screen_height := en.get_window_size_f32()
@@ -48,18 +48,29 @@ main :: proc() {
     defer en.unload_shader(sprite)
 
     face        := en.load_texture("assets/textures/face.png")
-    block       := en.load_texture("assets/textures/block.png", false)
-    block_solid := en.load_texture("assets/textures/block_solid.png", false)
     paddle      := en.load_texture("assets/textures/paddle.png")
-    background  := en.load_texture("assets/textures/background.jpg", false)
+    block       := en.load_texture("assets/textures/block.png",       false)
+    block_solid := en.load_texture("assets/textures/block_solid.png", false)
+    background  := en.load_texture("assets/textures/background.jpg",  false)
 
     defer en.unload_texture(&face)
-    defer en.unload_texture(&block)
     defer en.unload_texture(&paddle)
+    defer en.unload_texture(&block)
+    defer en.unload_texture(&block_solid)
     defer en.unload_texture(&background)
 
     levels := load_levels(&block_solid, &block)
     select_level = .Three
+
+
+    p_w := f32(paddle.width)  * 0.3
+    p_h := f32(paddle.height) * 0.3
+
+    x := (screen_width - p_w) / 2
+    y := screen_height - p_h
+
+    fmt.println(screen_width, screen_height)
+    fmt.println(x, y)
 
     main_loop: for {
         en.process_event()
@@ -76,7 +87,10 @@ main :: proc() {
 
         en.set_current_shader(sprite)
 
-        en.draw_sprite(background, {0, 0}, {screen_width, screen_height}, 0, {200, 200, 255, 255})
+        en.draw_sprite(background, {0, 0}, {screen_width, screen_height}, 0, {100, 100, 155, 255})
+
+
+        en.draw_sprite(paddle, {x, y}, {p_w, p_h}, 0)
 
         draw_level(&levels[int(select_level)])
    }
