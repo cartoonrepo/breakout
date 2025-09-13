@@ -1,6 +1,6 @@
 package engine
 
-import "core:fmt"
+import      "core:fmt"
 import glm  "core:math/linalg/glsl"
 import gl   "vendor:OpenGL"
 import stbi "vendor:stb/image"
@@ -34,7 +34,7 @@ Color :: struct {
 }
 
 // /renderer
-// @(private)
+@(private)
 renderer: Renderer
 
 init_renderer :: proc() {
@@ -44,7 +44,7 @@ init_renderer :: proc() {
     init_render_data()
 
     // TODO: check for default shader files.
-    default_shader := load_shader("assets/shaders/quad.vert", "assets/shaders/quad.frag")
+    default_shader := load_shader("assets/shaders/default.vert", "assets/shaders/default.frag")
 
     renderer.default_shader = default_shader
     renderer.current_shader = default_shader
@@ -130,8 +130,8 @@ load_texture :: proc(file: cstring, alpha: bool = true) -> (texture: Texture) {
     defer stbi.image_free(data)
 
     if data == nil {
-        // NOTE: we return 0 texture id
-        fmt.printfln("EROOR: Failed to load texture: %v", file)
+        // NOTE: we return 0 texture id, (black texture)
+        fmt.printfln("ERROR: Failed to load texture: %v", file)
         return
     }
 

@@ -59,8 +59,6 @@ init_level :: proc(data: ^[]u8, loc := #caller_location) -> Level {
 
     level := en.allocate_memory([]Entity, row * column)
 
-    assert(level != nil, "Failed to allocate memory to level.")
-
     return Level {
         row          = row,
         column       = column,
