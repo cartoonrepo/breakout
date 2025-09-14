@@ -5,10 +5,10 @@ import "core:os"
 import en "engine"
 
 // TODO: check paths
-LEVEL_ONE_PATH   :: "assets/levels/one.level"
-LEVEL_TWO_PATH   :: "assets/levels/two.level"
-LEVEL_THREE_PATH :: "assets/levels/three.level"
-LEVEL_FOUR_PATH  :: "assets/levels/four.level"
+LEVEL_1_PATH :: "assets/levels/one.level"
+LEVEL_2_PATH :: "assets/levels/two.level"
+LEVEL_3_PATH :: "assets/levels/three.level"
+LEVEL_4_PATH :: "assets/levels/four.level"
 
 BRICK_COLOR_1 :: en.Color {220, 220, 200, 255}
 BRICK_COLOR_2 :: en.Color {50, 100, 220, 255}
@@ -128,10 +128,10 @@ load_levels :: proc(block_solid, block: ^en.Texture, loc := #caller_location) ->
 
     for i in Levels {
         switch i {
-        case .One   : levels[i] = load_level(LEVEL_ONE_PATH,   block_solid, block)
-        case .Two   : levels[i] = load_level(LEVEL_TWO_PATH,   block_solid, block)
-        case .Three : levels[i] = load_level(LEVEL_THREE_PATH, block_solid, block)
-        case .Four  : levels[i] = load_level(LEVEL_FOUR_PATH,  block_solid, block)
+        case .One   : levels[i] = load_level(LEVEL_1_PATH, block_solid, block)
+        case .Two   : levels[i] = load_level(LEVEL_2_PATH, block_solid, block)
+        case .Three : levels[i] = load_level(LEVEL_3_PATH, block_solid, block)
+        case .Four  : levels[i] = load_level(LEVEL_4_PATH, block_solid, block)
        }
     }
 

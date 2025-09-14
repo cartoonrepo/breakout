@@ -111,3 +111,7 @@ get_window_size_f32 :: #force_inline proc() -> (f32, f32){
 window_resized :: #force_inline proc() -> bool {
     return ctx.resized
 }
+
+set_vsync :: proc(interval: i32) {
+    sdl.GL_SetSwapInterval(interval)
+}

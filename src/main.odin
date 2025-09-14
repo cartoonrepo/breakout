@@ -3,6 +3,7 @@ package main
 import    "core:fmt"
 import    "core:mem"
 import    "core:time"
+import    "core:math/rand"
 import sdl "vendor:sdl3"
 import en "engine"
 
@@ -12,6 +13,14 @@ SCREEN_HEIGHT :: 960
 
 SPRITE_VERTEX_SHADER   :: "assets/shaders/sprite.vert"
 SPRITE_FRAGMENT_SHADER :: "assets/shaders/sprite.frag"
+
+BALL_RADIUS   :: 32
+BALL_SPEED    :: 400
+BALL_ROTATION :: 8
+
+PLAYER_WIDTH  :: 150
+PLAYER_HEIGHT :: 30
+PLAYER_SPEED  :: 600
 
 Game_State :: enum {
     Active,
@@ -47,6 +56,7 @@ main :: proc() {
 
     // en.set_window_flags({.RESIZABLE, .MAXIMIZED})
     en.init_window(TITLE, SCREEN_WIDTH, SCREEN_HEIGHT); defer en.close_window()
+    en.set_vsync(1)
 
     screen_width, screen_height := en.get_window_size_f32()
 
@@ -67,14 +77,15 @@ main :: proc() {
     defer en.unload_texture(&block_solid)
     defer en.unload_texture(&background)
 
+    game_state := Game_State.Active
+
+    // /level
     levels := load_levels(&block_solid, &block)
     select_level = .One
 
-
-    player := setup_player(&paddle, 150, 30, 800, screen_width, screen_height)
-    ball   := setup_ball(&face, 50, 800, &player)
-
-    game_state := Game_State.Active
+    // /player
+    player := setup_player(&paddle, PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_SPEED, screen_width, screen_height)
+    ball   := setup_ball(&face, BALL_RADIUS, BALL_SPEED, &player)
 
     last_time: f32
     start_tick := time.tick_now()
@@ -90,23 +101,62 @@ main :: proc() {
 
         if en.window_resized() {
             screen_width, screen_height = en.get_window_size_f32()
-            player = setup_player(&paddle, 150, 30, 800, screen_width, screen_height)
-
+            player = setup_player(&paddle, PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_SPEED, screen_width, screen_height)
             update_level(&levels[int(select_level)], screen_width, screen_height)
         }
 
         switch game_state {
         case .Active :
-            vel: f32
-            if key_state[i32(sdl.Scancode.A)] do vel = -1
-            if key_state[i32(sdl.Scancode.D)] do vel =  1
+            // /player
+            player.vel.x = 0
+            if key_state[i32(sdl.Scancode.A)] do player.vel.x = -1
+            if key_state[i32(sdl.Scancode.D)] do player.vel.x =  1
 
-            player.pos.x += vel * player.speed * delta_time
+            player.pos.x += player.vel.x * player.speed * delta_time
 
-            if player.pos.x < 0 do player.pos.x = 0
-            if player.pos.x > screen_width - player.size.x do player.pos.x = screen_width - player.size.x
+            if player.pos.x < 0 {
+                player.pos.x = 0
+            }
 
-            ball.pos.x = player.pos.x + (player.size.x - ball.size.x) / 2
+            if player.pos.x > screen_width - player.size.x {
+                player.pos.x = screen_width - player.size.x
+            }
+
+            // /ball
+            if ball.stuck {
+                ball.pos.x = player.pos.x + (player.size.x - ball.size.x) / 2 // move ball with player
+                ball.rotation = 0
+
+                if key_state[i32(sdl.Scancode.SPACE)] {
+                    if player.vel.x != 0 {
+                        ball.vel.x = player.vel.x
+                    } else {
+                        ball.vel.x = rand.float32_range(-1, 1)
+                    }
+
+                    ball.vel.y = -1 // always up direction
+                    ball.stuck = false
+                }
+            }
+
+            // right-left wall collision
+            if ball.pos.x + ball.size.x >= screen_width || ball.pos.x <= 0 {
+                ball.vel.x *= -1
+            }
+
+            // top wall collision
+            if ball.pos.y <= 0 {
+                ball.vel.y *= -1
+            }
+
+            // bottom  wall collision, reset ball
+            if ball.pos.y + ball.size.y > screen_width {
+                reset_ball(&ball, &player)
+            }
+
+            ball.rotation += BALL_ROTATION * -ball.vel.x
+            ball.pos += ball.vel * ball.speed * delta_time
+
 
         case .Menu:
         case .Win:
@@ -121,36 +171,13 @@ main :: proc() {
             en.set_current_shader(sprite)
             en.draw_sprite(background, {0, 0}, {screen_width, screen_height}, 0, {100, 100, 155, 255})
 
-            en.draw_sprite(player.sprite, player.pos, player.size, 0)
-            en.draw_sprite(ball.sprite, ball.pos, ball.size, 0)
-
             draw_level(&levels[int(select_level)])
+
+            en.draw_sprite(player.sprite, player.pos, player.size, 0)
+            en.draw_sprite(ball.sprite, ball.pos, ball.size, ball.rotation)
+
         case .Menu:
         case .Win:
         }
    }
-}
-
-setup_player :: proc(texture: ^en.Texture, width, height, speed, screen_width, screen_height: f32) -> Entity {
-    x := (screen_width - width) / 2
-    y := screen_height - height * 1.5
-
-    return Entity {
-        pos    = {x, y},
-        size   = {width, height},
-        speed  = speed,
-        sprite = texture^,
-    }
-}
-
-setup_ball :: proc(texture: ^en.Texture, size, speed: f32, player: ^Entity) -> Entity {
-    x := player.pos.x + (player.size.x - size) / 2
-    y := player.pos.y - size
-
-    return Entity {
-        pos    = {x, y},
-        size   = {size, size},
-        speed  = speed,
-        sprite = texture^,
-    }
 }

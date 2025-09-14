@@ -168,7 +168,7 @@ unload_texture :: proc(texture: ^Texture) {
 // /sprite
 @(private)
 set_projection :: #force_inline proc(shader: u32, width, height: f32) {
-    // NOTE: i like top-left coordinate system.
+    // NOTE: i like top-left(0,0) coordinate system.
     projection := glm.mat4Ortho3d(0, width, height, 0, -1.0, 1.0)
     gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "projection"),  1, false, &projection[0, 0])
 }
