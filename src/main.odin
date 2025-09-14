@@ -157,6 +157,21 @@ main :: proc() {
             ball.rotation += BALL_ROTATION * -ball.vel.x
             ball.pos += ball.vel * ball.speed * delta_time
 
+            if check_collision(&ball, &player) {
+                ball.vel.y *= -1
+            }
+
+            for &brick in levels[int(select_level)].data {
+                if brick.destroyed do continue
+
+                if check_collision(&ball, &brick) {
+                    if brick.is_solid {
+                        ball.vel.y *= -1
+                    } else {
+                        brick.destroyed = true
+                    }
+                }
+            }
 
         case .Menu:
         case .Win:
@@ -180,4 +195,15 @@ main :: proc() {
         case .Win:
         }
    }
+}
+
+check_collision :: proc(r1, r2: ^Entity) -> bool {
+    if  r1.pos.x + r1.size.x > r2.pos.x &&
+        r1.pos.x < r2.pos.x + r2.size.x &&
+        r1.pos.y < r2.pos.y + r2.size.y &&
+        r1.pos.y + r1.size.y > r2.pos.y {
+            return true
+        }
+
+    return false
 }

@@ -34,7 +34,7 @@ setup_player :: proc(texture: ^en.Texture, width, height, speed, screen_width, s
 // /ball
 setup_ball :: proc(texture: ^en.Texture, radius, speed: f32, player: ^Entity) -> Entity {
     x := player.pos.x + (player.size.x - radius) / 2
-    y := player.pos.y - radius // 10 is offset, i eye balled it.
+    y := player.pos.y - radius
 
     return Entity {
         pos    = {x, y},
